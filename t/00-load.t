@@ -15,7 +15,7 @@ Log::Log4perl->easy_init($INFO);
 BEGIN {
 	my $logger = get_logger();
 	my $description;
-	Log::Log4perl->easy_init($DEBUG);
+	#Log::Log4perl->easy_init($DEBUG);
     use_ok( 'XDI' ) || print "Bail out!\n";
     
     my $xdi = new XDI;
@@ -56,7 +56,7 @@ BEGIN {
 	$lookup = '@!3436.F6A6.3644.4D74';
     $result = XDI::Connection::inumber_lookup($lookup);
     cmp_deeply($result->[1],$lookup,$description);
-    print Dumper($result);
+    #print Dumper($result);
     
     $description = "Resolve an XDI iname";
 	$lookup = '@xdi';
@@ -68,7 +68,7 @@ BEGIN {
     my $xdi_url = '@kynetx';
     $regx = qr/https:..xdi.fullxri.com/;
     $result = XDI::Connection::lookup($xdi_url);
-    print Dumper($result);
+    #print Dumper($result);
     cmp_deeply($result->[2],re($regx),$description);
 
     $description = "Get the XDI server URL for an inumber";
@@ -139,7 +139,7 @@ BEGIN {
 	
 	$description = "check auth statement";
 	my $secret = "Mxyzplkt";
-	$regx = qr/\$secret\$!\(\$token\)\/!\/\(data:,$secret\)$/;
+	$regx = qr/\$\(\$secret\)\$!\(\$token\)\/!\/\(data:,$secret\)$/;
 	$msg->secret($secret);
 	$result = $msg->_auth_statement;
 	cmp_deeply($result,re($regx), $description);
