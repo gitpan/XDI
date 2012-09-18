@@ -1,6 +1,6 @@
 package XDI;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use strict;
 use warnings;
@@ -166,6 +166,7 @@ sub _decode {
 	};
 	if ($@ && not defined $struct) {
 		carp("Not a valid JSON string");
+		carp($@);
 		return undef;
 	} else {
 		return $struct;
