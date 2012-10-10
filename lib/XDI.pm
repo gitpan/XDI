@@ -1,6 +1,6 @@
 package XDI;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use strict;
 use warnings;
@@ -22,6 +22,11 @@ use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 @ISA         = qw(Exporter);
 @EXPORT      = qw(
 	pick_xdi_tuple
+	tuples
+	get_literal
+	get_equivalent
+	get_property
+	get_context
 );
 %EXPORT_TAGS = ( );     # eg: TAG => [ qw!name1 name2! ],
 
@@ -104,19 +109,59 @@ sub connect {
 }
 
 
+sub tuples {
+	my ($graph,$match) = @_;
+	my @matches = ();
+	foreach my $key (sort keys %{$graph}) {
+		my ($subject,$predicate,$value);
+		if ($key =~ m/^(.+)\/(.+)$/) {
+			$subject = $1;
+			$predicate = $2;			
+			if (scalar(@{$graph->{$key}}) == 1) {
+
+				$value = $graph->{$key}->[0];
+			} else {
+				$value = $graph->{$key};
+			}
+
+			if (defined $match->[0]) {
+				if (ref $match->[0] eq "Regexp") {
+					next unless ($subject =~ m/$match->[0]/);
+				} elsif ($subject ne $match->[0]) {
+					next;
+				} 
+			}
+			
+
+			if (defined $match->[1]) {
+				if (ref $match->[1] eq "Regexp") {
+					next unless ($predicate =~ m/$match->[1]/);
+				} elsif ($predicate ne $match->[1]) {
+					next;
+				} 
+			}
+
+			if (defined $match->[2]) {
+				if (ref $match->[2] eq "Regexp") {
+					next unless ($value =~ m/$match->[2]/);
+				} elsif ($value ne $match->[2]) {
+					next;
+				} 
+			}
+			push(@matches, [$subject,$predicate,$value]);
+		}
+	}
+	return \@matches;	
+}
+
 sub pick_xdi_tuple {
 	my ($graph,$match) = @_;
-	my $logger = get_logger();
-#	$logger->debug("Match: ", sub {Dumper($match)});
+	my $logger = get_logger();#	$logger->debug("Match: ", sub {Dumper($match)});
 	foreach my $key (keys %{$graph}) {
 		my ($subject,$predicate,$value);
 		if ($key =~ m/^(.+)\/(.+)$/) {
 			$subject = $1;
-			$predicate = $2;
-#			$logger->debug("third element: ", ref $graph->{$key});
-#			$logger->debug("third element: ", sub {Dumper($graph->{$key})});
-#			$logger->debug("element: ", scalar(@{$graph->{$key}}));
-			
+			$predicate = $2;			
 			if (scalar(@{$graph->{$key}}) == 1) {
 
 				$value = $graph->{$key}->[0];
@@ -142,6 +187,80 @@ sub pick_xdi_tuple {
 	return undef;
 	
 }
+
+sub get_literal {
+	my ($graph,$keys) = @_;
+	my $logger= get_logger();
+	my @results = ();
+	if (ref $keys eq "ARRAY") {
+		foreach	my $key (@$keys) {
+			my $values = tuples($graph,[$key,'!',undef]);
+			if (defined $values) {
+				foreach my $element (@{$values}) {
+					push(@results,$element->[2]);
+				}
+			}
+			
+		}	
+	} elsif (ref $keys eq '') {
+		my $values = tuples($graph,[$keys,'!',undef]);
+		if (defined $values) {
+			foreach my $element (@{$values}) {
+				push(@results,$element->[2]);
+			}
+		}
+	}
+	if (scalar(@results) == 1) {
+		return $results[0];
+	} elsif (scalar(@results) > 1) {
+		return \@results;
+	} 		
+	return undef;
+}
+
+sub get_equivalent {
+	my ($graph,$key) = @_;
+	my @results = ();
+	my $values = tuples($graph,[$key,'$is',undef]);
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			push(@results,$element->[2]);
+		}
+		return \@results;
+	}
+	return undef;
+}
+
+sub get_property {
+	my ($graph,$key) = @_;
+	my @results = ();
+	my $values = tuples($graph,[$key,'()',undef]);
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			foreach my $m (@{$element->[2]}){
+				push(@results,$m);
+			}			
+		}
+		return \@results;
+	}
+	return undef;	
+}
+
+sub get_context {
+	my ($graph,$key) = @_;
+	my @results = ();
+	my $values = tuples($graph,[$key,'$is()',undef]);
+	if (defined $values) {
+		foreach my $element (@{$values}) {
+			foreach my $cl (@{$element->[2]}) {
+				push(@results,$cl);
+			}
+		}
+		return \@results;
+	}
+	return undef;	
+}
+
 
 # Hopefully this will get more sophisticated
 sub is_inumber {
@@ -401,6 +520,40 @@ Any one or two of the parameters may be C<undef>.  Only the first matching tuple
 
 pick_xdi_tuple returns an array reference [I<$subject>,I<$predicate>,I<$object>]
 
+=head2 tuples
+
+	$tuples = tuples($graph,[I<$subject> | I<regex>,I<$predicate> | I<regex>,I<$object> | I<regex>])
+
+tuples returns an array of array references.  Any of the match elements can be substituted with a regular expression.
+
+Usually the third element of the tuple is an array. If there is only 1 element to the array, the element is substituted for the array of 1 element
+
+=head2 get_literal
+
+	get_literal($graph,I<$key>)
+	get_literal($graph,I<@key>)
+	
+get_literal is a convenience function to pull literals (I<subject>/!/I<literal>) from the graph. A single key or an array of keys is a valid parameter
+
+If an array of keys I<@key> is used, all of the values are placed into a single array that is returned
+
+=head2 get_equivalent
+
+	get_equivalent($graph,$key)
+	
+get_equivalent is a convenience function to pull equivalance expressions (I<subject>/$is/I<equivalent>) from the graph.
+
+=head2 get_property
+
+	get_property($graph,$key)
+	
+get_property is a convenience function to pull properties of I<subject> (I<subject>/()/I<property>) from the graph.
+
+=head2 get_context
+
+	get_context($graph,$key)
+	
+get_context is a convenience function to pull the contexts of definitions (I<+(+def)>/$is()/[...]]) from the graph.
 
 =head1 AUTHOR
 

@@ -15,7 +15,7 @@ require Exporter;
 use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 # set the version for version checking
-$VERSION     = 0.03;
+$VERSION     = 0.04;
 
 @ISA         = qw(Exporter);
 @EXPORT      = qw();
@@ -47,8 +47,8 @@ sub new {
 	my $self = {%fields,};
 	bless($self,$class);
 	my $ug = new Data::UUID;
-	$self->{'id'} = $ug->create_str() ;
-#	$self->{'id'} = int(rand 10);
+#	$self->{'id'} = $ug->create_str() ;
+	$self->{'id'} = int(rand 10);
 	$self->{'timestamp'} = &_timestamp;
 	$self->{'operations'} = [];
 	my ($var_hash) = @_;
@@ -152,38 +152,38 @@ sub _timestamp {
 
 sub _local_requestor {
 	my $self = shift;
-	my $string = "(" . $self->from_graph . ')/$add/' . $self->from . '$msg'. $self->_id;
+	my $string = "(" . $self->from_graph . ')/$add/' . $self->from . '$($msg)'. $self->_id;
 	return $string;
 }
 
 sub _destination {
 	my $self = shift;
-	my $string = $self->from . '$msg' . $self->_id . '/$is()/(' . $self->target . ')';
+	my $string = $self->from . '$($msg)' . $self->_id . '/$is()/(' . $self->target . ')';
 	return $string;
 }
 
 sub _timestamp_statement {
 	my $self = shift;
-	my $string = $self->from . '$msg' . $self->_id . '$d/!/(data:,' . $self->timestamp . ')';
+	my $string = $self->from . '$($msg)' . $self->_id . '$d/!/(data:,' . $self->timestamp . ')';
 	return $string;
 }
 
 sub _link_contract {
 	my $self = shift;
-	my $string = $self->from . '$msg' . $self->_id . '/$do/' . $self->link_contract . '$do';
+	my $string = $self->from . '$($msg)' . $self->_id . '/$do/' . $self->link_contract . '$do';
 	return $string;
 }
 
 sub _operation {
 	my $self = shift;
 	my ($op,$statement) = @_;
-	my $string =  $self->from . '$msg' . $self->_id . '$do/' . $op . '/' . $statement;
+	my $string =  $self->from . '$($msg)' . $self->_id . '$do/' . $op . '/' . $statement;
 	return $string;
 }
 
 sub _auth_statement {
 	my $self = shift;
-	my $string = $self->from . '$msg' . $self->_id .'$($secret)$!($token)/!/(data:,' . $self->secret . ')';
+	my $string = $self->from . '$($msg)' . $self->_id .'$secret$!($token)/!/(data:,' . $self->secret . ')';
 	return $string;
 }
 

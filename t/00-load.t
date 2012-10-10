@@ -1,7 +1,6 @@
 ####!perl -T
 
 use Test::More tests => 23;
-use Test::More;
 use Test::Deep;
 use Data::Dumper;
 
@@ -72,7 +71,7 @@ BEGIN {
     cmp_deeply($result->[2],re($regx),$description);
 
     $description = "Get the XDI server URL for an inumber";
-    my $xdi_url = '@!3436.F6A6.3644.4D74';
+    $xdi_url = '@!3436.F6A6.3644.4D74';
     $regx = qr/https:..xdi.fullxri.com/;
     $result = XDI::Connection::lookup($xdi_url);
     cmp_deeply($result->[2],re($regx),$description);
@@ -139,7 +138,7 @@ BEGIN {
 	
 	$description = "check auth statement";
 	my $secret = "Mxyzplkt";
-	$regx = qr/\$\(\$secret\)\$!\(\$token\)\/!\/\(data:,$secret\)$/;
+	$regx = qr/\$secret\$!\(\$token\)\/!\/\(data:,$secret\)$/;
 	$msg->secret($secret);
 	$result = $msg->_auth_statement;
 	cmp_deeply($result,re($regx), $description);

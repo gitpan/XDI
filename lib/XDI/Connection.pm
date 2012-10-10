@@ -24,7 +24,7 @@ require Exporter;
 use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 # set the version for version checking
-$VERSION     = 0.03;
+$VERSION     = 0.04;
 
 @ISA         = qw(Exporter);
 @EXPORT      = qw(
@@ -84,7 +84,8 @@ sub new {
 
 sub message {
 	my $self = shift;
-	my $msg = XDI::Message->new();
+	#TODO: fix constructor to allow for messages passed from XDI::Connection
+	my $msg = XDI::Message->new(@_);
 	$msg->from_graph($self->__xdi__->from_graph);
 	$msg->from($self->__xdi__->from);
 	$msg->target($self->target);
