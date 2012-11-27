@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               XDI
-version:            0.04
+version:            0.05
 abstract:           Messaging client for XDI servers
 author:
     - Mark Horstmeier <solargroovey@gmail.com>

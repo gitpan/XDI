@@ -24,7 +24,7 @@ require Exporter;
 use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 # set the version for version checking
-$VERSION     = 0.04;
+$VERSION     = 0.05;
 
 @ISA         = qw(Exporter);
 @EXPORT      = qw(
@@ -51,7 +51,7 @@ my %fields = (
 
 our $AUTOLOAD;
 our $USE_LOCAL_MESSAGE = 1;
-our $XRI_AUTHORITY = "http://xri2xdi.net";
+our $XRI_AUTHORITY = "http://beta.xri.net/xdi2-xrinet/";
 
 sub new {
 	my $class  = shift;
@@ -223,12 +223,16 @@ sub xdi_lookup {
 	};
 	my $msg = XDI::Message->new($rstruct);
 	$msg->get($iname);
-	#print $msg->to_string, "\n";
+	#print "$authority: ",$msg->to_string, "\n";
 	my $resp = _post($authority,$msg->to_string);
 	return XDI::_decode($resp);
 }
 
-
+sub set_resolution_authority {
+	my ($authority) = @_;
+	$XRI_AUTHORITY = $authority;
+	return $XRI_AUTHORITY;
+}
 
 sub AUTOLOAD {
 	my $self   = shift;
@@ -431,19 +435,15 @@ lookup, iname_lookup, and inumber_lookup are convenience functions to call the X
 built into XDI::Connection. C<lookup> uses a simple method to determine whether the parameter
 is an inumber or iname and then performs the appropriate I<x_lookup>
 
-Technically, these are both XDI messages to the xri2xdi.net server
-but I<x_lookup> encapsulates the whole process into an anonymous XDI message.  xri2xdi.net also allows direct 
-http calls to a url, but the results are in serialized XDI JSON format.  Respectively:
+Technically, these are both XDI messages to the $XRI_AUTHORITY server
+but I<x_lookup> encapsulates the whole process into an anonymous XDI message.
 
-=over 4
+=head2 set_resolution_authority
 
-=item http://xri2xdi.net/=tester
-=item http://xri2xdi.net/=!3436.F6A6.3644.4D74
-
-=back
-
-	BTW: currently, neither of these are valid XDI entities
-
+Since the XDI resolution process is still in development, C<set_resolution_authority> allows the
+developer to specify explicitly the resolution server.  In case the resolution URI changes,
+this will allow discovery to continue until the module can be updated
+	
 
 =head1 AUTHOR
 
